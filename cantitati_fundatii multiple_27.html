@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <title>Workbook Fundatii</title>
+  <style>
+    body          { font-family: Arial; background:#f4f4f4; padding:20px; }
+    .tabs         { display:flex; gap:5px; margin-bottom:10px; }
+    .tab-btn      { padding:10px 20px; border:1px solid #888; background:#ddd; cursor:pointer; }
+    .tab-btn.active { background:#fff; font-weight:bold; }
+    .sheet        { display:none; background:#fff; padding:15px; border:1px solid #ccc; }
+    .sheet.active { display:block; }
+    .form-row     { display:flex; gap:10px; margin-bottom:10px; }
+    .form-row label { width:120px; }
+    .form-row input { width:60px; }
+    .output       { margin-top:10px; background:#e1f5fe; padding:10px; white-space:pre-line; }
+  </style>
+</head>
+<body>
+
+  <h1>Workbook Cantități Fundatii</h1>
+
+  <div class="tabs" id="tabs"></div>
+  <button onclick="adaugaFundatie()">➕ Adaugă Fundație</button>
+
+  <div id="sheets_container"></div>
+
+  <!-- === ȘABLON FIȘĂ FUNDAȚIE === -->
+<template id="template_fundatie">
+  <div class="sheet sheet-fundatie">
+    <h2 class="titlu">Fundație</h2>
+
+    <div style="display: flex; gap: 5px; align-items: flex-start; flex-wrap: wrap;">
+      
+      <!-- FORMULAR INPUTURI -->
+      <div style="flex: 1; min-width: 100px; max-width: 650px;">
+        <div class="form-row">
+          <label>n<sub>f</sub> [–]</label>
+          <input type="number" class="numar_fundatii" value="1" min="1" />
+          <span>n<sub>f</sub> – număr fundații asemenea</span>
+        </div>
+
+        <div class="form-row">
+          <label>L<sub>f</sub> [m]</label><input type="number" id="Lf" step="0.1" class="lungime_fundatie" />
+          <span>L<sub>f</sub> – Lungime fundație</span>
+        </div>
+        <div class="form-row">
+          <label>B<sub>f</sub> [m]</label><input type="number" id="Bf" step="0.1" class="latime_fundatie" />
+          <span>B<sub>f</sub> – Lățime fundație</span>
+        </div>
+        <div class="form-row">
+          <label>+/-0.00 [-m]</label><input type="number" id="Cota0" step="0.1" class="cota_0" />
+          <span>+/-0.00 – Distanta fata de cota superioara cuzinet</span>
+        </div>
+        <div class="form-row">
+          <label>H<sub>t</sub> [m]</label><input type="number" id="Ht" step="0.1" class="grosime_talpa" />
+          <span>H<sub>t</sub> – Grosime talpă fundație</span>
+        </div>
+        <div class="form-row">
+          <label>l<sub>c</sub> [m]</label><input type="number" id="lc" step="0.1" class="lungime_cuzinet" />
+          <span>l<sub>c</sub> – Lungime cuzinet </span>
+        </div>
+        <div class="form-row">
+          <label>b<sub>c</sub> [m]</label><input type="number" id="bc" step="0.1" class="latime_cuzinet" />
+          <span>b<sub>c</sub> – Latime cuzinet </span>
+        </div>
+        <div class="form-row">
+          <label>h<sub>c</sub> [m]</label><input type="number" id="hc" step="0.1" class="grosime_cuzinet" />
+          <span>h<sub>c</sub> – Grosime cuzinet </span>
+        </div>
+        <div class="form-row">
+          <label>m/V [kg/m<sup>3</sup>]</label><input type="number" id="m/V" step="0.1" class="consum_specific_armatura" />
+          <span>m/V – Consum specific armatura (orientativ, 80-110 kg/mc) </span>
+        </div>
+        <div class="form-row">
+          <label>h<sub>bs</sub> [m]</label><input type="number" id="hbs" step="0.1" class="grosime_bs" />
+          <span>h<sub>bs</sub> – Grosime beton simplu (egalizare)</span>
+        </div>
+        <div class="form-row">
+          <label>ev<sub>exc</sub> [m]</label><input type="number" id="evexc" step="0.1" class="evazare_excavatie" />
+          <span>ev<sub>exc</sub> – Evazare săpătură</span>
+        </div>
+        <div class="form-row">
+          <label>p [1/x]</label><input type="number" id="panta" step="0.1"  class="panta_excavatie" value="1" />
+          <span>p – Panta săpătură</span>
+        </div>
+
+<div class="form-row">
+  <label>Ø<sub>Lf</sub> [mm]</label>
+  <input type="number" class="diam_Lf" value="12" />   
+  <span>Diametru bară perpendicular pe L<sub>f</sub> inferior </span>
+</div>
+
+<div class="form-row">
+<label>Pas Ø<sub>Lf</sub> [cm]</label>
+  <input type="number" class="pas_diam_Lf" value="20" />
+  <span>Distanța între bare perpendicular pe L<sub>f</sub> inferior </span>
+</div>
+
+<div class="form-row">
+  <label>Ø<sub>Bf</sub> [mm]</label>
+  <input type="number" class="diam_Bf" value="12" />
+  <span>Diametru bară perpendicular pe B<sub>f</sub> inferior </span>
+</div>
+
+<div class="form-row">
+  <label>Pas Ø<sub>Bf</sub> [cm]</label>
+  <input type="number" class="pas_diam_Bf" value="20" />
+  <span>Distanța între bare perpendicular pe B<sub>f</sub> inferior </span>
+</div>
+
+<div class="form-row">
+  <label>Ø<sub>Lfsup</sub> [mm]</label>
+  <input type="number" class="diam_Lf_sup" value="12" />   
+  <span>Diametru bară perpendicular pe L<sub>f</sub> superior </span>
+</div>
+
+<div class="form-row">
+<label>Pas Ø<sub>Lfsup</sub> [cm]</label>
+  <input type="number" class="pas_diam_Lf_sup" value="20" />
+  <span>Distanța între bare perpendicular pe L<sub>f</sub> superior </span>
+</div>
+
+<div class="form-row">
+  <label>Ø<sub>Bfsup</sub> [mm]</label>
+  <input type="number" class="diam_Bf_sup" value="12" />
+  <span>Diametru bară perpendicular pe B<sub>f</sub> superior </span>
+</div>
+
+<div class="form-row">
+  <label>Pas Ø<sub>Bfsup</sub> [cm]</label>
+  <input type="number" class="pas_diam_Bf_sup" value="20" />
+  <span>Distanța între bare perpendicular pe B<sub>f</sub> superior </span>
+</div>
+
+<div class="form-row">
+  <label>Ø<sub>vert</sub> [mm]</label>
+  <input type="number" class="diam_bara_vert" value="12" />
+  <span>Diametru bară verticala </span>
+</div>
+
+<div class="form-row">
+  <label>Pas Ø<sub>vert</sub> [cm]</label>
+  <input type="number" class="pas_diam_bara_vert" value="20" />
+  <span>Distanța între bare verticale </span>
+</div>
+
+<div class="form-row">
+  <label>Ø<sub>etr</sub> [mm]</label>
+  <input type="number" class="diam_etr" value="12" />
+  <span>Diametru etrier cuzinet </span>
+</div>
+
+<div class="form-row">
+  <label>Pas Ø<sub>etr</sub> [cm]</label>
+  <input type="number" class="pas_diam_etr" value="20" />
+  <span>Distanța între etrieri </span>
+</div>
+
+        <button onclick="calculeazaIndividual(this)">Calculează</button>
+        <button onclick="stergeFundatie(this)">🗑️ Șterge Fundație</button>
+        <div class="output cantitati_fundatie"></div>
+      </div>
+
+   <div style="width: 100%; max-width: 1000px; height: auto;">  
+    <svg id="svgFundatie" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+
+<polygon id="fundatie" points="" fill="#ffe081" stroke="#000" />
+<polygon id="excavatie" points="" fill="#8d6e63" stroke="#000" />
+<polygon id="betonsimplu" points="" fill="#ffe081" stroke="#000" />
+<polygon id="talpa" points="" fill="#ffe081" stroke="#000" />
+<polygon id="cuzinet" points="" fill="#ffe081" stroke="#000" />
+
+</svg>
+
+<script>
+function initDesenareFundatie(sheet) {
+  const svg = sheet.querySelector('svg');
+  const getVal = sel => parseFloat(sheet.querySelector(sel).value);
+
+  const deseneaza = () => {
+    const Lf = getVal('.lungime_fundatie');
+    const Bf = getVal('.latime_fundatie');
+    const Cota0 = getVal('.cota_0');
+    const Ht = getVal('.grosime_talpa');
+    const lc = getVal('.lungime_cuzinet');
+    const bc = getVal('.latime_cuzinet');
+    const hc = getVal('.grosime_cuzinet');
+    const hbs = getVal('.grosime_bs');
+    const evexc = getVal('.evazare_excavatie');
+    const panta = getVal('.panta_excavatie');
+
+    const Df = Cota0 + hc + Ht + hbs;
+
+    if ([Lf, Bf, Df, Ht, lc, bc, hc, hbs, evexc, panta].some(isNaN)) return;
+
+    const scale = 10;
+    const lungimefundatie = Lf * scale;
+    const latimefundatie = Bf * scale;
+    const adancimefundare = Df * scale;
+    const grosimetalpa = Ht * scale;
+    const lungimecuzinet = lc * scale;
+    const latimecuzinet = bc * scale;
+    const grosimecuzinet = hc * scale;
+    const betonsimplu = hbs * scale;
+    const evazareexcavatie = evexc * scale;
+    const pantaexcavatie = panta;
+    const evazaresuperioara = pantaexcavatie * adancimefundare;
+
+    const x0 = 10, y0 = 10;
+    const x1 = 10, y1 = 10;
+
+    const polygon = (pts) => pts.map(p => p.join(',')).join(' ');
+
+    const pointsFundatie = polygon([
+      [x0+evazaresuperioara+evazareexcavatie, y0],
+      [x0+evazaresuperioara+evazareexcavatie+lungimefundatie, y0],
+      [x0+evazaresuperioara+evazareexcavatie+lungimefundatie, y0+latimefundatie],
+      [x0+evazaresuperioara+evazareexcavatie, y0+latimefundatie]
+    ]);
+
+    const pointsExcavatie = polygon([
+      [x0, y0+latimefundatie+y1],
+      [x0+evazaresuperioara+evazareexcavatie+lungimefundatie+evazareexcavatie+evazaresuperioara, y0+latimefundatie+y1],
+      [x0+evazaresuperioara+evazareexcavatie+lungimefundatie+evazareexcavatie, y0+latimefundatie+y1+adancimefundare+betonsimplu],
+      [x0+evazaresuperioara, y0+latimefundatie+y1+adancimefundare+betonsimplu]
+    ]);
+
+    const pointsBetonsimplu = polygon([
+      [x0+evazaresuperioara+evazareexcavatie-1, y0+latimefundatie+y1+adancimefundare],
+      [x0+evazaresuperioara+evazareexcavatie+lungimefundatie+1, y0+latimefundatie+y1+adancimefundare],
+      [x0+evazaresuperioara+evazareexcavatie+lungimefundatie+1, y0+latimefundatie+y1+adancimefundare+betonsimplu],
+      [x0+evazaresuperioara+evazareexcavatie-1, y0+latimefundatie+y1+adancimefundare+betonsimplu]
+    ]);
+
+    const pointsTalpa = polygon([
+      [x0+evazaresuperioara+evazareexcavatie, y0+latimefundatie+y1+adancimefundare-grosimetalpa],
+      [x0+evazaresuperioara+evazareexcavatie+lungimefundatie, y0+latimefundatie+y1+adancimefundare-grosimetalpa],
+      [x0+evazaresuperioara+evazareexcavatie+lungimefundatie, y0+latimefundatie+y1+adancimefundare],
+      [x0+evazaresuperioara+evazareexcavatie, y0+latimefundatie+y1+adancimefundare]
+    ]);
+
+    const pointsCuzinet = polygon([
+      [x0+evazaresuperioara+evazareexcavatie+(lungimefundatie-lungimecuzinet)/2, y0+latimefundatie+y1+adancimefundare-grosimetalpa-grosimecuzinet],
+      [x0+evazaresuperioara+evazareexcavatie+(lungimefundatie-lungimecuzinet)/2+lungimecuzinet, y0+latimefundatie+y1+adancimefundare-grosimetalpa-grosimecuzinet],
+      [x0+evazaresuperioara+evazareexcavatie+(lungimefundatie-lungimecuzinet)/2+lungimecuzinet, y0+latimefundatie+y1+adancimefundare-grosimetalpa],
+      [x0+evazaresuperioara+evazareexcavatie+(lungimefundatie-lungimecuzinet)/2, y0+latimefundatie+y1+adancimefundare-grosimetalpa]
+    ]);
+
+    svg.querySelector('#fundatie').setAttribute('points', pointsFundatie);
+    svg.querySelector('#excavatie').setAttribute('points', pointsExcavatie);
+    svg.querySelector('#betonsimplu').setAttribute('points', pointsBetonsimplu);
+    svg.querySelector('#talpa').setAttribute('points', pointsTalpa);
+    svg.querySelector('#cuzinet').setAttribute('points', pointsCuzinet);
+
+    const totalWidth = lungimefundatie + 2 * Math.max(evazaresuperioara, evazareexcavatie) + 100;
+    const totalHeight = latimefundatie + adancimefundare + betonsimplu + 100;
+    svg.setAttribute('viewBox', `0 0 ${totalWidth} ${totalHeight}`);
+  };
+
+  sheet.querySelectorAll('input').forEach(inp => inp.addEventListener('input', deseneaza));
+}
+function stergeFundatie(button) {
+  const sheet = button.closest('.sheet');
+  const id = sheet.id;
+
+  const confirmare = confirm(`⚠️ Ești sigur că vrei să ștergi Fundația ${id}?`);
+  if (!confirmare) return;
+
+  // Elimină sheet-ul și tab-ul asociat
+  sheet.remove();
+  [...tabs.children].forEach(btn => {
+    if (btn.textContent === id) btn.remove();
+  });
+
+  // Activează ultimul tab rămas (sau Centralizator dacă nu mai e nimic)
+  const lastTab = [...tabs.children].reverse().find(b => b.textContent !== 'Centralizator');
+  if (lastTab) {
+    schimbaSheet(lastTab.textContent);
+  } else {
+    schimbaSheet('centralizator_sheet');
+  }
+
+  salveazaDate(); // actualizează localStorage
+actualizeazaContorFundatii();
+}</script>
+
+</template>
+
+  <!-- === CENTRALIZATOR === -->
+  <div class="sheet" id="centralizator_sheet">
+    <h2>Centralizator Cantități</h2>
+    <button onclick="calculeazaTotal()">🔢 Calculează Total</button>
+    <button onclick="exportJSON()">💾 Export JSON</button>
+    <button onclick="importJSON()">📂 Import JSON</button>
+    <button onclick="printeazaTot()">🖨️ Printează Tot</button>
+    <input type="file" id="import_file" accept=".json" style="display:none">
+    <div id="central_output" class="output"></div>
+      </div>
+
+  <script>
+    const STORAGE_KEY = 'fundatiiData';
+
+    let counter = 0;
+    const tabs      = document.getElementById('tabs');
+    const container = document.getElementById('sheets_container');
+
+    /* ---------- UTILITARE ---------- */
+    function addInputListeners(sheet) {
+      sheet.querySelectorAll('input').forEach(inp =>
+        inp.addEventListener('input', salveazaDate)
+      );
+    }
+
+    function gatherData() {
+      const data = [];
+      document.querySelectorAll('.sheet:not(#centralizator_sheet)').forEach(sheet => {
+        data.push({
+          nf   : +sheet.querySelector('.numar_fundatii'  ).value || 0,
+          Lf   : +sheet.querySelector('.lungime_fundatie').value || 0,
+          Bf   : +sheet.querySelector('.latime_fundatie' ).value || 0,
+          Cota0   : +sheet.querySelector('.cota_0').value || 0,
+          Ht   : +sheet.querySelector('.grosime_talpa'   ).value || 0,
+          lc   : +sheet.querySelector('.lungime_cuzinet').value || 0,
+          bc   : +sheet.querySelector('.latime_cuzinet' ).value || 0,
+          hc   : +sheet.querySelector('.grosime_cuzinet' ).value || 0,
+          hbs  : +sheet.querySelector('.grosime_bs'      ).value || 0,
+          ev   : +sheet.querySelector('.evazare_excavatie').value || 0,
+          pexc : +sheet.querySelector('.panta_excavatie' ).value || 0
+        });
+      });
+      return data;
+    }
+
+    function salveazaDate() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(gatherData()));
+    }
+
+function actualizeazaContorFundatii() {
+  const fundatii = [...document.querySelectorAll('.sheet')].filter(s => s.id.startsWith('F'));
+  if (fundatii.length === 0) {
+    counter = 0;
+    return;
+  }
+
+  const numere = fundatii.map(s => parseInt(s.id.replace('F', ''))).filter(n => !isNaN(n));
+  counter = Math.max(...numere);
+}
+    function clearFundatii() {
+      // șterge tab-urile și fișele (exceptând centralizatorul)
+      [...tabs.children].forEach(b => { if (b.textContent !== 'Centralizator') b.remove(); });
+      document.querySelectorAll('.sheet:not(#centralizator_sheet)').forEach(s => s.remove());
+      counter = 0;
+    }
+
+    /* ---------- ADĂUGARE FIȘĂ ---------- */
+       function adaugaFundatie() {
+      counter++;
+      const id = `F${counter}`;
+
+      // tab
+      const btn = document.createElement('button');
+      btn.textContent = id;
+      btn.className   = 'tab-btn';
+      btn.onclick     = () => schimbaSheet(id);
+      tabs.appendChild(btn);
+
+      // sheet
+      const clone = document.getElementById('template_fundatie').content.cloneNode(true);
+      const sheet = clone.querySelector('.sheet');
+      sheet.id = id;
+      sheet.querySelector('.titlu').textContent = `Fundație ${id}`;
+      container.appendChild(sheet);
+      initDesenareFundatie(sheet);
+
+      addInputListeners(sheet);
+      schimbaSheet(id);
+}
+
+    /* ---------- SCHIMBĂ FIȘA VIZIBILĂ ---------- */
+    function schimbaSheet(id) {
+      document.querySelectorAll('.sheet').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(id)?.classList.add('active');
+      [...tabs.children].find(b => b.textContent === id)?.classList.add('active');
+    }
+
+    /* ---------- CALCULE PE FIȘĂ ---------- */
+    function calculeazaIndividual(button) {
+      const fundatie = button.closest('.sheet');
+      const id    = fundatie.id;
+
+      const nf   = parseFloat(fundatie.querySelector('.numar_fundatii').value);
+      const Lf   = parseFloat(fundatie.querySelector('.lungime_fundatie').value);
+      const Bf   = parseFloat(fundatie.querySelector('.latime_fundatie').value);
+      const Cota0   = parseFloat(fundatie.querySelector('.cota_0').value);
+      const Ht   = parseFloat(fundatie.querySelector('.grosime_talpa').value);
+      const lc   = parseFloat(fundatie.querySelector('.lungime_cuzinet').value);
+      const bc   = parseFloat(fundatie.querySelector('.latime_cuzinet').value);
+      const hc   = parseFloat(fundatie.querySelector('.grosime_cuzinet').value);
+      const mV   = parseFloat(fundatie.querySelector('.consum_specific_armatura').value);
+      const hbs  = parseFloat(fundatie.querySelector('.grosime_bs').value);
+      const ev   = parseFloat(fundatie.querySelector('.evazare_excavatie').value);
+      const pexc = parseFloat(fundatie.querySelector('.panta_excavatie').value);
+
+
+// Inițializări greutăți
+let greutateTotala_diam_Lf = 0,
+greutateTotala_diam_Bf = 0,
+greutateTotala_diam_Lf_sup = 0,
+greutateTotala_diam_Bf_sup = 0,
+greutateTotala_bare_vert_lc = 0,
+greutateTotala_bare_vert_bc = 0,
+greutateTotala_etr = 0;
+
+ if ([nf, Lf, Bf, Cota0, Ht,lc,bc,hc, mV, hbs, ev, pexc].some(x => isNaN(x) || x <= 0)) {
+        fundatie.querySelector('.cantitati_fundatie').innerText =
+          "⚠️ Completează toate câmpurile cu valori pozitive!";
+        return;
+      }
+
+      /* Dimensiuni săpătură */
+      const hexc = Cota0 + hc+Ht+hbs;
+      const Liex = Lf + 2 * ev;
+      const Biex = Bf + 2 * ev;
+      const Lsex = Liex + 2 * hexc * pexc;
+      const Bsex = Biex + 2 * hexc * pexc;
+
+      /* Volum pe fundație */
+      const V_sap_unit   = (1/6) * hexc *(Lsex * Bsex + (Lsex + Liex) * (Bsex + Biex) + Liex * Biex);
+      const V_bs_unit    = (0.1 + Lf + 0.1) * (0.1 + Bf + 0.1) * hbs;
+      const V_talpa_unit = Lf * Bf * Ht;
+      const V_cuzinet_unit = lc * bc * hc;
+      const V_fundatie_unit = V_talpa_unit+V_cuzinet_unit;
+
+     /* Armatura pe fundație */
+     const m_V_fundatie_unit=mV*(V_talpa_unit +V_cuzinet_unit);
+
+      /* Total pentru n_f */
+      const V_sap_tot   = V_sap_unit   * nf;
+      const V_bs_tot    = V_bs_unit    * nf;
+      const V_talpa_tot = V_talpa_unit * nf;
+      const V_cuzinet_tot = V_cuzinet_unit * nf;
+      const V_fundatie_tot = V_talpa_tot+V_cuzinet_tot;
+
+     /* Armatura pe n_f */
+     const m_V_fundatie_tot=m_V_fundatie_unit* nf;
+
+const diam_Lf = parseFloat(fundatie.querySelector('.diam_Lf').value);
+const pas_diam_Lf = parseFloat(fundatie.querySelector('.pas_diam_Lf').value);
+const diam_Bf = parseFloat(fundatie.querySelector('.diam_Bf').value);
+const pas_diam_Bf = parseFloat(fundatie.querySelector('.pas_diam_Bf').value);
+const diam_Lf_sup = parseFloat(fundatie.querySelector('.diam_Lf_sup').value);
+const pas_diam_Lf_sup = parseFloat(fundatie.querySelector('.pas_diam_Lf_sup').value);
+const diam_Bf_sup = parseFloat(fundatie.querySelector('.diam_Bf_sup').value);
+const pas_diam_Bf_sup = parseFloat(fundatie.querySelector('.pas_diam_Bf_sup').value);
+const diam_bara_vert = parseFloat(fundatie.querySelector('.diam_bara_vert').value);
+const pas_diam_bara_vert = parseFloat(fundatie.querySelector('.pas_diam_bara_vert').value);
+const diam_etr = parseFloat(fundatie.querySelector('.diam_etr').value);
+const pas_diam_etr = parseFloat(fundatie.querySelector('.pas_diam_etr').value);
+
+if (!isNaN(Lf) && !isNaN(Bf) && !isNaN(Ht) && !isNaN(diam_Lf) && !isNaN(pas_diam_Lf) && !isNaN(diam_Bf) && !isNaN(pas_diam_Bf)&& !isNaN(diam_Lf_sup) && !isNaN(pas_diam_Lf_sup)&& !isNaN(diam_Bf_sup) && !isNaN(pas_diam_Bf_sup)&& !isNaN(diam_bara_vert) && !isNaN(pas_diam_bara_vert)&& !isNaN(diam_etr)&& !isNaN(pas_diam_etr)&& pas_diam_Lf > 0&& pas_diam_Bf > 0&& pas_diam_Lf_sup > 0&& pas_diam_Bf_sup > 0&& pas_diam_bara_vert > 0) {
+
+  const bruteNr_Lf = ((Lf * 100 - 10) / pas_diam_Lf)+1;
+  const frac_Lf = bruteNr_Lf - Math.floor(bruteNr_Lf);
+  const nr_diam_Lf = frac_Lf >= 0.5 ? Math.ceil(bruteNr_Lf) : Math.floor(bruteNr_Lf);
+
+  const lungime_diam_Lf = (Bf * 100 - 10 + 2 * (Ht * 100 - 10))/100;
+  const lungimeTotala_diam_Lf = nr_diam_Lf * lungime_diam_Lf;
+  const greutateTotala_diam_Lf=lungimeTotala_diam_Lf*Math.PI*Math.pow(diam_Lf/1000,2)/4*7850
+
+  const bruteNr_Bf = ((Bf * 100 - 10) / pas_diam_Bf)+1;
+  const frac_Bf = bruteNr_Bf - Math.floor(bruteNr_Bf);
+  const nr_diam_Bf = frac_Bf >= 0.5 ? Math.ceil(bruteNr_Bf) : Math.floor(bruteNr_Bf);
+
+  const lungime_diam_Bf = (Lf * 100 - 10 + 2 * (Ht * 100 - 10))/100;
+  const lungimeTotala_diam_Bf = nr_diam_Bf * lungime_diam_Bf;
+  const greutateTotala_diam_Bf=lungimeTotala_diam_Bf*Math.PI*Math.pow(diam_Bf/1000,2)/4*7850
+
+  const bruteNr_Lf_sup = ((Lf * 100 - 10) / pas_diam_Lf_sup)+1;
+  const frac_Lf_sup = bruteNr_Lf_sup - Math.floor(bruteNr_Lf_sup);
+  const nr_diam_Lf_sup = frac_Lf_sup >= 0.5 ? Math.ceil(bruteNr_Lf_sup) : Math.floor(bruteNr_Lf_sup);
+
+  const lungime_diam_Lf_sup = (Bf * 100 - 10 + 2 * (Ht * 100 - 10))/100;
+  const lungimeTotala_diam_Lf_sup = nr_diam_Lf_sup * lungime_diam_Lf_sup;
+  const greutateTotala_diam_Lf_sup=lungimeTotala_diam_Lf_sup*Math.PI*Math.pow(diam_Lf_sup/1000,2)/4*7850
+
+  const bruteNr_Bf_sup = ((Bf * 100 - 10) / pas_diam_Bf_sup)+1;
+  const frac_Bf_sup = bruteNr_Bf_sup - Math.floor(bruteNr_Bf_sup);
+  const nr_diam_Bf_sup = frac_Bf_sup >= 0.5 ? Math.ceil(bruteNr_Bf_sup) : Math.floor(bruteNr_Bf_sup);
+
+  const lungime_diam_Bf_sup = (Lf * 100 - 10 + 2 * (Ht * 100 - 10))/100;
+  const lungimeTotala_diam_Bf_sup = nr_diam_Bf_sup * lungime_diam_Bf_sup;
+  const greutateTotala_diam_Bf_sup=lungimeTotala_diam_Bf_sup*Math.PI*Math.pow(diam_Bf_sup/1000,2)/4*7850
+
+  const bruteNr_bare_vert_lc = ((lc * 100 - 10) / pas_diam_bara_vert)+1;
+  const frac_bare_vert_lc = bruteNr_bare_vert_lc - Math.floor(bruteNr_bare_vert_lc);
+  const nr_bare_vert_lc = frac_bare_vert_lc >= 0.5 ? Math.ceil(bruteNr_bare_vert_lc) : Math.floor(bruteNr_bare_vert_lc);
+
+  const lungime_bara_vert_lc = ((15/100+(Ht-5/100+hc-5/100))*2+(bc-2*5/100));
+  const lungimeTotala_bare_vert_lc = nr_bare_vert_lc * lungime_bara_vert_lc;
+  const greutateTotala_bare_vert_lc=lungimeTotala_bare_vert_lc*Math.PI*Math.pow(diam_bara_vert/1000,2)/4*7850
+
+  const bruteNr_bare_vert_bc = ((bc * 100 - 10) / pas_diam_bara_vert)-1;
+  const frac_bare_vert_bc = bruteNr_bare_vert_bc - Math.floor(bruteNr_bare_vert_bc);
+  const nr_bare_vert_bc = frac_bare_vert_bc >= 0.5 ? Math.ceil(bruteNr_bare_vert_bc) : Math.floor(bruteNr_bare_vert_bc);
+
+  const lungime_bara_vert_bc = ((15/100+(Ht-5/100+hc-5/100))*2+(lc-2*5/100));
+  const lungimeTotala_bare_vert_bc = nr_bare_vert_bc * lungime_bara_vert_bc;
+  const greutateTotala_bare_vert_bc=lungimeTotala_bare_vert_bc*Math.PI*Math.pow(diam_bara_vert/1000,2)/4*7850
+
+  const bruteNr_etr = ((hc * 100 - 10) / pas_diam_etr)+1;
+  const frac_etr = bruteNr_etr - Math.floor(bruteNr_etr);
+  const nr_etr = frac_etr >= 0.5 ? Math.ceil(bruteNr_etr) : Math.floor(bruteNr_etr);
+
+  const lungime_etr = (2*(bc-10/100))+(2*(lc-10/100))+20/100;
+  const lungimeTotala_etr = nr_etr * lungime_etr;
+  const greutateTotala_etr=lungimeTotala_etr*Math.PI*Math.pow(diam_etr/1000,2)/4*7850
+
+ const greutateTotala_armatura_fundatie=greutateTotala_diam_Lf+greutateTotala_diam_Bf+greutateTotala_diam_Lf_sup+greutateTotala_diam_Bf_sup+greutateTotala_bare_vert_lc+greutateTotala_bare_vert_bc+greutateTotala_etr
+ const greutateTotala_armatura_fundatii=greutateTotala_armatura_fundatie* nf;
+
+const consum_armatura_efectiv=greutateTotala_armatura_fundatie/V_fundatie_unit
+
+     fundatie.querySelector('.cantitati_fundatie').innerText =
+`n_f (număr fundații asemenea): ${nf}
+
+Cantități pentru O singură fundație ${id}:
+ • Volum săpătură: ${V_sap_unit.toFixed(2)} m³
+ • Volum beton simplu (egalizare): ${V_bs_unit.toFixed(2)} m³
+ • Volum beton talpă fundație: ${V_talpa_unit.toFixed(2)} m³
+ • Volum beton cuzinet fundație: ${V_cuzinet_unit.toFixed(2)} m³
+ • Volum beton fundație: ${V_fundatie_unit.toFixed(2)} m³
+ • Armatura fundație: ${m_V_fundatie_unit.toFixed(2)} kg
+
+Cantități TOTALE pentru n_f = ${nf} fundații asemenea:
+ • Volum săpătură total ${id}: ${V_sap_tot.toFixed(2)} m³
+ • Volum beton simplu total ${id}: ${V_bs_tot.toFixed(2)} m³
+ • Volum talpă fundații total ${id}: ${V_talpa_tot.toFixed(2)} m³
+ • Volum cuzinet fundații total ${id}: ${V_cuzinet_tot.toFixed(2)} m³
+ • Volum beton fundații total ${id}: ${V_fundatie_tot.toFixed(2)} m³
+ • Armatura fundații total ${id}: ${m_V_fundatie_tot.toFixed(2)} kg
+
+⚙️ Armare longitudinală inferior:
+ • Număr bare: ${nr_diam_Lf}
+ • Lungime bară: ${lungime_diam_Lf.toFixed(2)} m
+ • Lungime totală bare: ${lungimeTotala_diam_Lf.toFixed(2)} m
+ • Greutate totală bare: ${greutateTotala_diam_Lf.toFixed(2)} kg
+
+⚙️ Armare transversala inferior:
+ • Număr bare: ${nr_diam_Bf}
+ • Lungime bară: ${lungime_diam_Bf.toFixed(2)} m
+ • Lungime totală bare: ${lungimeTotala_diam_Bf.toFixed(2)} m
+ • Greutate totală bare: ${greutateTotala_diam_Bf.toFixed(2)} kg
+
+⚙️ Armare longitudinală superior:
+ • Număr bare: ${nr_diam_Lf_sup} 
+ • Lungime bară: ${lungime_diam_Lf_sup.toFixed(2)} m  
+ • Lungime totală bare: ${lungimeTotala_diam_Lf_sup.toFixed(2)} m  
+ • Greutate totală bare: ${greutateTotala_diam_Lf_sup.toFixed(2)} kg
+
+⚙️ Armare transversala superior:
+ • Număr bare: ${nr_diam_Bf_sup}
+ • Lungime bară: ${lungime_diam_Bf_sup.toFixed(2)} m
+ • Lungime totală bare: ${lungimeTotala_diam_Bf_sup.toFixed(2)} m
+ • Greutate totală bare: ${greutateTotala_diam_Bf_sup.toFixed(2)} kg
+
+⚙️ Armare verticala longitudinala (perpendicular pe lc):
+ • Număr bare: ${nr_bare_vert_lc}
+ • Lungime bară: ${lungime_bara_vert_lc.toFixed(2)} m
+ • Lungime totală bare: ${lungimeTotala_bare_vert_lc.toFixed(2)} m
+ • Greutate totală bare: ${greutateTotala_bare_vert_lc.toFixed(2)} kg
+
+⚙️ Armare verticala transversala (perpendicular pe bc):
+ • Număr bare: ${nr_bare_vert_bc}
+ • Lungime bară: ${lungime_bara_vert_bc.toFixed(2)} m
+ • Lungime totală bare: ${lungimeTotala_bare_vert_bc.toFixed(2)} m
+ • Greutate totală bare: ${greutateTotala_bare_vert_bc.toFixed(2)} kg
+
+⚙️ Armare etrieri (pe inaltimea cuzinetului):
+ • Număr etrieri: ${nr_etr}
+ • Lungime etrieri: ${lungime_etr.toFixed(2)} m
+ • Lungime totală etrieri: ${lungimeTotala_etr.toFixed(2)} m
+ • Greutate totală etrieri: ${greutateTotala_etr.toFixed(2)} kg
+
+ • Greutate totala armatura/fundatie: ${greutateTotala_armatura_fundatie.toFixed(2)} kg
+ • Greutate totala armatura fundatii: ${greutateTotala_armatura_fundatii.toFixed(2)} kg
+
+ • Consum efectiv armatura/fundatie: ${consum_armatura_efectiv.toFixed(2)} kg`;
+
+}
+
+
+salveazaDate();
+    }
+
+   /* ---------- CENTRALIZATOR ---------- */
+    function calculeazaTotal() {
+      let total_sapatura = 0,
+          total_beton    = 0,
+          total_talpa    = 0,
+          total_cuzinet    = 0,
+          total_fundatii    = 0,
+          total_armatura    = 0,
+          total_armatura_efectiv   = 0;
+
+      document.querySelectorAll('.sheet:not(#centralizator_sheet)').forEach(sheet => {
+        const txt = sheet.querySelector('.cantitati_fundatie').innerText;
+        const mSap   = txt.match(/Volum săpătură total.*?:\s([\d.]+)/);
+        const mBeton = txt.match(/Volum beton simplu total.*?:\s([\d.]+)/);
+        const mTalpa = txt.match(/Volum talpă fundații total.*?:\s([\d.]+)/);
+        const mCuzinet = txt.match(/Volum cuzinet fundații total.*?:\s([\d.]+)/);
+        const mFundatii = txt.match(/Volum beton fundații total.*?:\s([\d.]+)/);
+        const mArmatura= txt.match(/Armatura fundații total.*?:\s([\d.]+)/);
+        const mArmatura_efectiv= txt.match(/Greutate totala armatura fundatii.*?:\s([\d.]+)/);
+
+   
+        if (mSap)   total_sapatura += parseFloat(mSap[1]);
+        if (mBeton) total_beton    += parseFloat(mBeton[1]);
+        if (mTalpa) total_talpa    += parseFloat(mTalpa[1]);
+        if (mCuzinet) total_cuzinet    += parseFloat(mCuzinet[1]);
+        if (mFundatii) total_fundatii    += parseFloat(mFundatii[1]);
+        if (mArmatura) total_armatura    += parseFloat(mArmatura[1]);
+        if (mArmatura_efectiv) total_armatura_efectiv    += parseFloat(mArmatura_efectiv[1]);
+      });
+
+      document.getElementById('central_output').innerText =
+`📊 CENTRALIZATOR TOTAL:
+ • Volum săpătură (toate fundațiile): ${total_sapatura.toFixed(2)} m³
+ • Volum beton simplu (toate fundațiile): ${total_beton.toFixed(2)} m³
+ • Volum talpă fundații (toate fundațiile): ${total_talpa.toFixed(2)} m³
+ • Volum cuzinet fundații (toate fundațiile): ${total_cuzinet.toFixed(2)} m³
+ • Volum beton fundații (toate fundațiile): ${total_fundatii.toFixed(2)} m³
+ • Armatura fundații (toate fundațiile): ${total_armatura.toFixed(2)} kg
+ • Greutate totala armatura fundatii: ${total_armatura_efectiv.toFixed(2)} kg
+`;
+    }
+
+    /* ---------- EXPORT / IMPORT JSON ---------- */
+    function exportJSON() {
+      const blob = new Blob([JSON.stringify(gatherData(), null, 2)], {type:'application/json'});
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = 'fundatii.json';
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    function importJSON() {
+      document.getElementById('import_file').click();
+    }
+
+function printeazaTot() {
+  const toateFisele = [...document.querySelectorAll('.sheet:not(#centralizator_sheet)')];
+  const centralizator = document.getElementById('centralizator_sheet');
+
+  let htmlPrint = `
+    <html>
+    <head>
+      <title>Print Fundații</title>
+      <style>
+        @media print {
+          body { font-family: Arial; font-size: 12px; margin: 20mm; }
+          h2 { margin-top: 30px; }
+          .form-row { display: flex; flex-wrap: wrap; margin-bottom: 5px; }
+          .form-row label { width: 120px; font-weight: bold; }
+          .form-row span { margin-left: 10px; color: #444; }
+          .output { margin-top: 10px; white-space: pre-line; background: #eef; padding: 10px; border: 1px solid #ccc; }
+          svg { margin-top: 10px; max-width: 100%; height: auto; }
+          .page-break { page-break-after: always; display: block; height: 0; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>📄 Fișe fundații și centralizator</h1>
+  `;
+
+  // Fișe individuale
+  toateFisele.forEach(sheet => {
+    const titlu = sheet.querySelector('.titlu')?.outerHTML || "";
+    const inputuri = sheet.querySelectorAll('.form-row');
+    const svg = sheet.querySelector('svg')?.outerHTML || "";
+    const output = sheet.querySelector('.cantitati_fundatie')?.outerHTML || "";
+
+    htmlPrint += `<div>${titlu}`;
+    
+    inputuri.forEach(row => {
+      const label = row.querySelector('label')?.innerText || '';
+      const input = row.querySelector('input');
+      const valoare = input ? input.value : '';
+      const unit = row.querySelector('span')?.innerText || '';
+      htmlPrint += `<div><strong>${label}</strong>= ${valoare}, <em>${unit}</em></div>`;
+    });
+
+    htmlPrint += svg;
+    htmlPrint += output;
+    htmlPrint += `</div><div class="page-break"></div>`;
+  });
+
+  // Centralizator
+  htmlPrint += `<div><h2>📊 Centralizator</h2>`;
+  htmlPrint += centralizator.querySelector('#central_output')?.outerHTML || "";
+  htmlPrint += `</div>`;
+
+  htmlPrint += `</body></html>`;
+
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(htmlPrint);
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(() => {
+    printWindow.print();
+    printWindow.close();
+  }, 500);
+}
+    document.getElementById('import_file').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if (!Array.isArray(data)) throw Error('Format JSON invalid');
+          clearFundatii();
+          data.forEach(obj => {
+            adaugaFundatie();
+            const sheet = container.lastElementChild;
+            sheet.querySelector('.numar_fundatii').value   = obj.nf   ?? '';
+            sheet.querySelector('.lungime_fundatie').value = obj.Lf   ?? '';
+            sheet.querySelector('.latime_fundatie' ).value = obj.Bf   ?? '';
+            sheet.querySelector('.cota_0').value = obj.Cota0   ?? '';
+            sheet.querySelector('.grosime_talpa'   ).value = obj.Ht   ?? '';
+            sheet.querySelector('.lungime_cuzinet' ).value = obj.lc   ?? '';
+            sheet.querySelector('.latime_cuzinet'  ).value = obj.bc   ?? '';
+            sheet.querySelector('.grosime_cuzinet' ).value = obj.hc   ?? '';
+            sheet.querySelector('.grosime_bs'      ).value = obj.hbs  ?? '';
+            sheet.querySelector('.evazare_excavatie').value= obj.ev   ?? '';
+            sheet.querySelector('.panta_excavatie' ).value = obj.pexc ?? '';
+            calculeazaIndividual(sheet.querySelector('button'));
+          });
+          salveazaDate();
+          schimbaSheet('centralizator_sheet');
+        } catch(err) {
+          alert('Eroare import: ' + err.message);
+        }
+        e.target.value = ''; // reset input
+      };
+      reader.readAsText(file);
+    });
+
+    /* ---------- ÎNCĂRCARE DATE ---------- */
+    function incarcaDate() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) { adaugaFundatie(); return; }
+
+      try {
+        const data = JSON.parse(saved);
+        if (!Array.isArray(data) || data.length === 0) throw Error();
+        data.forEach(obj => {
+          adaugaFundatie();
+          const sheet = container.lastElementChild;
+          sheet.querySelector('.numar_fundatii').value   = obj.nf   ?? '';
+          sheet.querySelector('.lungime_fundatie').value = obj.Lf   ?? '';
+          sheet.querySelector('.latime_fundatie' ).value = obj.Bf   ?? '';
+          sheet.querySelector('.cota_0').value = obj.Cota0   ?? '';
+          sheet.querySelector('.grosime_talpa'   ).value = obj.Ht   ?? '';
+          sheet.querySelector('.lungime_cuzinet' ).value = obj.lc   ?? '';
+          sheet.querySelector('.latime_cuzinet'  ).value = obj.bc   ?? '';
+          sheet.querySelector('.grosime_cuzinet' ).value = obj.hc   ?? '';
+          sheet.querySelector('.grosime_bs'      ).value = obj.hbs  ?? '';
+          sheet.querySelector('.evazare_excavatie').value= obj.ev   ?? '';
+          sheet.querySelector('.panta_excavatie' ).value = obj.pexc ?? '';
+          calculeazaIndividual(sheet.querySelector('button'));
+        });
+      } catch {
+        adaugaFundatie();
+      }
+    }
+
+    /* ---------- INIT ---------- */
+    window.onload = () => {
+      // tab centralizator
+      const centralBtn = document.createElement('button');
+      centralBtn.textContent = 'Centralizator';
+      centralBtn.className   = 'tab-btn active';
+      centralBtn.onclick     = () => schimbaSheet('centralizator_sheet');
+      tabs.appendChild(centralBtn);
+      document.getElementById('centralizator_sheet').classList.add('active');
+
+      incarcaDate();
+    };
+  </script>
+
+</body>
+</html>

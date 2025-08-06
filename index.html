@@ -413,7 +413,7 @@ greutateTotala_bare_vert_lc = 0,
 greutateTotala_bare_vert_bc = 0,
 greutateTotala_etr = 0;
 
- if ([nf, Lf, Bf, Cota0, Ht,lc,bc,hc, mV, hbs, ev, pexc].some(x => isNaN(x) || x <= 0)) {
+ if ([nf, Lf, Bf, Ht,lc,bc,hc, mV, hbs, ev, pexc].some(x => isNaN(x) || x <= 0)) {
         fundatie.querySelector('.cantitati_fundatie').innerText =
           "⚠️ Completează toate câmpurile cu valori pozitive!";
         return;
@@ -793,3 +793,4 @@ function printeazaTot() {
 
 </body>
 </html>
+
